@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   BarChart,
   Bar,
@@ -8,7 +8,8 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  ReferenceArea
 } from 'recharts';
 import './RepoCharts.css';
 
@@ -31,6 +32,13 @@ function getMonthStart(timestamp) {
 }
 
 function RepoCharts({ commits, repoInfo }) {
+  // Zoom state for LOC chart
+  const [refAreaLeft, setRefAreaLeft] = useState(null);
+  const [refAreaRight, setRefAreaRight] = useState(null);
+  const [zoomLeft, setZoomLeft] = useState(null);
+  const [zoomRight, setZoomRight] = useState(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+
   // Aggregate commits by MONTH for bar chart (simpler and cleaner)
   const barData = useMemo(() => {
     if (commits.length === 0) return [];
@@ -106,6 +114,39 @@ function RepoCharts({ commits, repoInfo }) {
     const months = (last - first) / (1000 * 60 * 60 * 24 * 30);
     return { months, first, last };
   }, [barData]);
+
+  // Zoom handlers for LOC chart
+  const handleMouseDown = (e) => {
+    if (e && e.activeLabel) {
+      setRefAreaLeft(e.activeLabel);
+      setIsSelecting(true);
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (isSelecting && e && e.activeLabel) {
+      setRefAreaRight(e.activeLabel);
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (refAreaLeft && refAreaRight && refAreaLeft !== refAreaRight) {
+      const left = Math.min(refAreaLeft, refAreaRight);
+      const right = Math.max(refAreaLeft, refAreaRight);
+      setZoomLeft(left);
+      setZoomRight(right);
+    }
+    setRefAreaLeft(null);
+    setRefAreaRight(null);
+    setIsSelecting(false);
+  };
+
+  const resetZoom = () => {
+    setZoomLeft(null);
+    setZoomRight(null);
+  };
+
+  const isZoomed = zoomLeft !== null && zoomRight !== null;
 
   if (commits.length === 0) {
     return (
@@ -225,20 +266,36 @@ function RepoCharts({ commits, repoInfo }) {
 
         {/* LOC over time line chart */}
         <div className="chart-card">
-          <h4>Lines of Code Over Time</h4>
+          <div className="chart-header-row">
+            <h4>Lines of Code Over Time</h4>
+            {isZoomed && (
+              <button className="reset-zoom-btn" onClick={resetZoom}>
+                Reset Zoom
+              </button>
+            )}
+            {!isZoomed && <span className="zoom-hint">Drag to zoom</span>}
+          </div>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={locData} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+              <LineChart
+                data={locData}
+                margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
                 <XAxis
                   dataKey="timestamp"
                   type="number"
                   scale="time"
-                  domain={['dataMin', 'dataMax']}
+                  domain={isZoomed ? [zoomLeft, zoomRight] : ['dataMin', 'dataMax']}
                   tickFormatter={formatLineTick}
                   tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
                   tickLine={false}
                   axisLine={{ stroke: 'var(--border-color)' }}
+                  allowDataOverflow={true}
                 />
                 <YAxis
                   tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
@@ -250,6 +307,7 @@ function RepoCharts({ commits, repoInfo }) {
                     return value;
                   }}
                   width={45}
+                  domain={['auto', 'auto']}
                 />
                 <Tooltip content={<LocTooltip />} />
                 <Line
@@ -260,6 +318,15 @@ function RepoCharts({ commits, repoInfo }) {
                   dot={false}
                   activeDot={{ r: 4 }}
                 />
+                {refAreaLeft && refAreaRight && (
+                  <ReferenceArea
+                    x1={refAreaLeft}
+                    x2={refAreaRight}
+                    strokeOpacity={0.3}
+                    fill="var(--color-accent)"
+                    fillOpacity={0.3}
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           </div>

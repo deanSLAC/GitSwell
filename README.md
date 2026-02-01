@@ -1,4 +1,4 @@
-# Git Contrib
+# GitSwell
 
 A GitHub-style contribution heatmap for your local git repositories. Visualize your coding activity across multiple projects in a beautiful, interactive heatmap.
 
@@ -12,6 +12,7 @@ A GitHub-style contribution heatmap for your local git repositories. Visualize y
 - **Hide/Show**: Click repositories to temporarily hide them from the heatmap
 - **Day Details**: Click any day to see detailed commit information
 - **Year Navigation**: Browse contributions by year
+- **LOC Charts**: View lines of code over time with click-drag zoom
 
 ## Quick Start
 
@@ -24,8 +25,8 @@ A GitHub-style contribution heatmap for your local git repositories. Visualize y
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/git-contrib.git
-cd git-contrib
+git clone https://github.com/deanSLAC/GitSwell.git
+cd GitSwell
 
 # Install dependencies
 npm install
@@ -97,7 +98,3 @@ The app stores configuration in the SQLite database. No config files needed!
 | `/api/top-repos/:year` | GET | Get top repos for a year |
 | `/api/parse` | POST | Run the repository parser |
 | `/api/stats` | GET | Get contribution statistics |
-
-## License
-
-MIT

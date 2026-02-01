@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Git repository parser for git-contrib.
+Git repository parser for GitSwell.
 Scans a directory for git repositories and extracts commit data into SQLite.
 Detects and auto-ignores duplicate/backup repos.
 """

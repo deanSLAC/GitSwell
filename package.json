@@ -1,5 +1,5 @@
 {
-  "name": "git-contrib",
+  "name": "gitswell",
   "version": "1.0.0",
   "description": "A GitHub-style contribution heatmap for local git repositories",
   "type": "module",
@@ -14,7 +14,8 @@
     "better-sqlite3": "^11.0.0",
     "express": "^5.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "recharts": "^3.7.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
