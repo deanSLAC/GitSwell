@@ -70,11 +70,17 @@ function RepoCharts({ commits, repoInfo }) {
       const date = new Date(commit.timestamp * 1000);
       const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 
-      // Always update to latest cumulative value for this day
-      dailyData.set(dayStart, {
-        timestamp: dayStart,
-        loc: cumulativeLOC
-      });
+      // Get or create entry for this day
+      if (!dailyData.has(dayStart)) {
+        dailyData.set(dayStart, {
+          timestamp: dayStart,
+          loc: cumulativeLOC,
+          messages: []
+        });
+      }
+      const entry = dailyData.get(dayStart);
+      entry.loc = cumulativeLOC; // Update to latest cumulative value
+      entry.messages.push(commit.message);
     });
 
     return Array.from(dailyData.values()).sort((a, b) => a.timestamp - b.timestamp);
@@ -132,12 +138,31 @@ function RepoCharts({ commits, repoInfo }) {
     return formatDate(timestamp, 'month');
   };
 
-  const locTooltipFormatter = (value) => {
-    return [value.toLocaleString() + ' lines', 'Total LOC'];
-  };
+  // Custom tooltip for LOC chart that shows commit messages
+  const LocTooltip = ({ active, payload }) => {
+    if (!active || !payload || !payload[0]) return null;
 
-  const locLabelFormatter = (timestamp) => {
-    return formatDate(timestamp, 'full');
+    const data = payload[0].payload;
+    const messages = data.messages || [];
+
+    return (
+      <div className="loc-tooltip">
+        <div className="loc-tooltip-header">
+          <span className="loc-tooltip-date">{formatDate(data.timestamp, 'full')}</span>
+          <span className="loc-tooltip-loc">{data.loc.toLocaleString()} lines</span>
+        </div>
+        {messages.length > 0 && (
+          <div className="loc-tooltip-messages">
+            {messages.slice(0, 5).map((msg, i) => (
+              <div key={i} className="loc-tooltip-message">• {msg?.slice(0, 60)}{msg?.length > 60 ? '...' : ''}</div>
+            ))}
+            {messages.length > 5 && (
+              <div className="loc-tooltip-more">...and {messages.length - 5} more</div>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -226,17 +251,7 @@ function RepoCharts({ commits, repoInfo }) {
                   }}
                   width={45}
                 />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '6px',
-                    color: 'var(--text-primary)',
-                    fontSize: '12px'
-                  }}
-                  formatter={locTooltipFormatter}
-                  labelFormatter={locLabelFormatter}
-                />
+                <Tooltip content={<LocTooltip />} />
                 <Line
                   type="monotone"
                   dataKey="loc"

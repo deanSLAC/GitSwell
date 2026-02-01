@@ -83,3 +83,52 @@
 .recharts-default-tooltip {
   font-size: 0.75rem !important;
 }
+
+/* Custom LOC tooltip */
+.loc-tooltip {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  max-width: 300px;
+}
+
+.loc-tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.loc-tooltip-date {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.loc-tooltip-loc {
+  color: var(--text-secondary);
+}
+
+.loc-tooltip-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.loc-tooltip-message {
+  color: var(--text-secondary);
+  font-size: 0.625rem;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.loc-tooltip-more {
+  color: var(--text-muted);
+  font-size: 0.625rem;
+  font-style: italic;
+}
