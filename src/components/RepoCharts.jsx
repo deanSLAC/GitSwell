@@ -32,11 +32,13 @@ function getMonthStart(timestamp) {
 }
 
 function RepoCharts({ commits, repoInfo }) {
-  // Zoom state for LOC chart
+  // Zoom state for LOC chart (x and y axes)
   const [refAreaLeft, setRefAreaLeft] = useState(null);
   const [refAreaRight, setRefAreaRight] = useState(null);
   const [zoomLeft, setZoomLeft] = useState(null);
   const [zoomRight, setZoomRight] = useState(null);
+  const [zoomTop, setZoomTop] = useState(null);
+  const [zoomBottom, setZoomBottom] = useState(null);
   const [isSelecting, setIsSelecting] = useState(false);
 
   // Aggregate commits by MONTH for bar chart (simpler and cleaner)
@@ -115,7 +117,7 @@ function RepoCharts({ commits, repoInfo }) {
     return { months, first, last };
   }, [barData]);
 
-  // Zoom handlers for LOC chart
+  // Zoom handlers for LOC chart (x and y axes)
   const handleMouseDown = (e) => {
     if (e && e.activeLabel) {
       setRefAreaLeft(e.activeLabel);
@@ -135,6 +137,18 @@ function RepoCharts({ commits, repoInfo }) {
       const right = Math.max(refAreaLeft, refAreaRight);
       setZoomLeft(left);
       setZoomRight(right);
+
+      // Compute y-axis bounds from data within selected x-range
+      const dataInRange = locData.filter(d => d.timestamp >= left && d.timestamp <= right);
+      if (dataInRange.length > 0) {
+        const locValues = dataInRange.map(d => d.loc);
+        const minLoc = Math.min(...locValues);
+        const maxLoc = Math.max(...locValues);
+        // Add 5% padding to y-axis
+        const padding = (maxLoc - minLoc) * 0.05 || Math.abs(maxLoc) * 0.05;
+        setZoomBottom(minLoc - padding);
+        setZoomTop(maxLoc + padding);
+      }
     }
     setRefAreaLeft(null);
     setRefAreaRight(null);
@@ -144,6 +158,8 @@ function RepoCharts({ commits, repoInfo }) {
   const resetZoom = () => {
     setZoomLeft(null);
     setZoomRight(null);
+    setZoomTop(null);
+    setZoomBottom(null);
   };
 
   const isZoomed = zoomLeft !== null && zoomRight !== null;
@@ -307,7 +323,8 @@ function RepoCharts({ commits, repoInfo }) {
                     return value;
                   }}
                   width={45}
-                  domain={['auto', 'auto']}
+                  domain={isZoomed ? [zoomBottom, zoomTop] : ['auto', 'auto']}
+                  allowDataOverflow={true}
                 />
                 <Tooltip content={<LocTooltip />} />
                 <Line
