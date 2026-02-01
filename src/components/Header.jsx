@@ -6,7 +6,7 @@ function Header({ view, setView, projectsPath, onRefresh }) {
       <div className="header-content">
         <div className="header-left">
           <h1 className="header-title" onClick={() => setView('heatmap')}>
-            Git Contrib
+            GitSwell
           </h1>
           {projectsPath && (
             <span className="header-path" title={projectsPath}>
