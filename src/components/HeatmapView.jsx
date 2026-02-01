@@ -3,6 +3,7 @@ import YearSelector from './YearSelector';
 import ContributionHeatmap from './ContributionHeatmap';
 import TopRepos from './TopRepos';
 import DayDetail from './DayDetail';
+import RepoCharts from './RepoCharts';
 import './HeatmapView.css';
 
 function HeatmapView({
@@ -95,6 +96,13 @@ function HeatmapView({
           selectedDate={selectedDate}
         />
       </div>
+
+      {singleRepoMode && singleRepoInfo && (
+        <RepoCharts
+          commits={commits}
+          repoInfo={singleRepoInfo}
+        />
+      )}
 
       {selectedDate && (
         <DayDetail
