@@ -1,0 +1,168 @@
+.day-detail {
+  max-height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+.day-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.day-detail-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.day-detail-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.day-detail-stats strong {
+  color: var(--text-primary);
+}
+
+.day-detail-stats .additions {
+  color: var(--color-success);
+}
+
+.day-detail-stats .deletions {
+  color: var(--color-danger);
+}
+
+.day-detail-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 1rem;
+}
+
+.repo-group {
+  margin-bottom: 1.5rem;
+}
+
+.repo-group:last-child {
+  margin-bottom: 0;
+}
+
+.repo-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-primary);
+  border-left: 3px solid;
+  border-radius: 0 4px 4px 0;
+  margin-bottom: 0.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.repo-group-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.repo-group-count {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  padding: 0.125rem 0.5rem;
+  border-radius: 10px;
+}
+
+.commit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.commit-item {
+  padding: 0.5rem;
+  background: var(--bg-primary);
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.commit-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.commit-time {
+  color: var(--text-muted);
+  font-size: 0.625rem;
+  min-width: 45px;
+}
+
+.commit-hash {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+  font-size: 0.625rem;
+  color: var(--color-accent);
+  background: var(--bg-tertiary);
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+}
+
+.commit-message {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commit-files {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.file-change {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.125rem 0;
+  font-size: 0.625rem;
+}
+
+.file-change.more {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+}
+
+.file-stats {
+  display: flex;
+  gap: 0.375rem;
+  flex-shrink: 0;
+}
+
+.file-stats .additions {
+  color: var(--color-success);
+}
+
+.file-stats .deletions {
+  color: var(--color-danger);
+}

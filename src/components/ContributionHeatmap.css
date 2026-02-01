@@ -1,0 +1,107 @@
+.contribution-heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.heatmap-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.month-labels {
+  display: flex;
+  font-size: 0.625rem;
+  color: var(--text-secondary);
+  padding-left: 30px;
+  position: relative;
+  height: 1rem;
+}
+
+.day-labels-spacer {
+  width: 30px;
+  flex-shrink: 0;
+}
+
+.month-label {
+  position: absolute;
+  white-space: nowrap;
+}
+
+.grid-container {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.day-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 0.625rem;
+  color: var(--text-secondary);
+  width: 26px;
+  flex-shrink: 0;
+}
+
+.day-label {
+  height: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 4px;
+}
+
+.cells-grid {
+  display: flex;
+  gap: 3px;
+}
+
+.week-column {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.day-cell {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  transition: transform 0.1s ease;
+}
+
+.day-cell.in-year {
+  cursor: pointer;
+}
+
+.day-cell.in-year:hover {
+  transform: scale(1.3);
+  outline: 1px solid var(--text-secondary);
+  outline-offset: 1px;
+  z-index: 1;
+}
+
+.day-cell.selected {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  font-size: 0.625rem;
+  color: var(--text-secondary);
+}
+
+.legend-cells {
+  display: flex;
+  gap: 2px;
+}
+
+.legend-cell {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+}

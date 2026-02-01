@@ -1,0 +1,90 @@
+.top-repos {
+  margin-bottom: 1rem;
+}
+
+.top-repos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.top-repos-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.top-repos-hint {
+  font-size: 0.625rem;
+  color: var(--text-muted);
+}
+
+.top-repos-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.top-repo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--repo-color, var(--border-color));
+  border-radius: 16px;
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.top-repo-chip:hover {
+  background: var(--bg-tertiary);
+}
+
+.top-repo-chip.hidden {
+  opacity: 0.5;
+  border-style: dashed;
+}
+
+.top-repo-chip.focused {
+  background: var(--repo-color);
+  color: #000;
+}
+
+.repo-rank {
+  font-weight: 600;
+  color: var(--repo-color);
+}
+
+.top-repo-chip.focused .repo-rank {
+  color: inherit;
+}
+
+.repo-name {
+  font-weight: 500;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.repo-count {
+  color: var(--text-secondary);
+  font-size: 0.625rem;
+}
+
+.top-repo-chip.focused .repo-count {
+  color: inherit;
+  opacity: 0.8;
+}
+
+.hidden-indicator {
+  font-size: 0.625rem;
+  color: var(--color-warning);
+  font-style: italic;
+}
