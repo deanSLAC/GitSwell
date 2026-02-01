@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import './ReposView.css';
 
 function ReposView({ repos, updateRepo, onBack }) {
-  const [filter, setFilter] = useState('all'); // all, active, ignored
+  const [filter, setFilter] = useState('all'); // all, active, ignored, duplicates
   const [search, setSearch] = useState('');
   const [editingColor, setEditingColor] = useState(null);
 
@@ -11,6 +11,7 @@ function ReposView({ repos, updateRepo, onBack }) {
       .filter(repo => {
         if (filter === 'active') return !repo.ignored;
         if (filter === 'ignored') return repo.ignored;
+        if (filter === 'duplicates') return repo.duplicate_of;
         return true;
       })
       .filter(repo =>
@@ -23,7 +24,8 @@ function ReposView({ repos, updateRepo, onBack }) {
     const total = repos.length;
     const active = repos.filter(r => !r.ignored).length;
     const ignored = repos.filter(r => r.ignored).length;
-    return { total, active, ignored };
+    const duplicates = repos.filter(r => r.duplicate_of).length;
+    return { total, active, ignored, duplicates };
   }, [repos]);
 
   const handleColorChange = (repoId, color) => {
@@ -65,6 +67,14 @@ function ReposView({ repos, updateRepo, onBack }) {
           >
             Ignored ({stats.ignored})
           </button>
+          {stats.duplicates > 0 && (
+            <button
+              className={`filter-btn ${filter === 'duplicates' ? 'active' : ''}`}
+              onClick={() => setFilter('duplicates')}
+            >
+              Duplicates ({stats.duplicates})
+            </button>
+          )}
         </div>
 
         <input
@@ -85,7 +95,7 @@ function ReposView({ repos, updateRepo, onBack }) {
           filteredRepos.map(repo => (
             <div
               key={repo.id}
-              className={`repo-card ${repo.ignored ? 'ignored' : ''}`}
+              className={`repo-card ${repo.ignored ? 'ignored' : ''} ${repo.duplicate_of ? 'duplicate' : ''}`}
             >
               <div
                 className="repo-color-indicator"
@@ -95,8 +105,21 @@ function ReposView({ repos, updateRepo, onBack }) {
               />
 
               <div className="repo-info">
-                <span className="repo-name">{repo.name}</span>
-                <span className="repo-path" title={repo.path}>{repo.path}</span>
+                <div className="repo-name-row">
+                  <span className="repo-name">{repo.name}</span>
+                  {repo.duplicate_of && (
+                    <span className="duplicate-badge" title={`Duplicate of ${repo.duplicate_of}`}>
+                      duplicate
+                    </span>
+                  )}
+                </div>
+                {repo.duplicate_of ? (
+                  <span className="repo-duplicate-of">
+                    Backup/older version of: <strong>{repo.duplicate_of}</strong>
+                  </span>
+                ) : (
+                  <span className="repo-path" title={repo.path}>{repo.path}</span>
+                )}
               </div>
 
               <div className="repo-stats">
