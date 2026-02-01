@@ -11,17 +11,10 @@
 }
 
 .month-labels {
-  display: flex;
   font-size: 0.625rem;
   color: var(--text-secondary);
-  padding-left: 30px;
   position: relative;
   height: 1rem;
-}
-
-.day-labels-spacer {
-  width: 30px;
-  flex-shrink: 0;
 }
 
 .month-label {

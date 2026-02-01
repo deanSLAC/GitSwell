@@ -133,12 +133,11 @@ function ContributionHeatmap({ commits, year, onSelectDate, selectedDate }) {
       <div className="heatmap-grid">
         {/* Month labels */}
         <div className="month-labels">
-          <div className="day-labels-spacer" />
           {monthLabels.map((label, i) => (
             <div
               key={i}
               className="month-label"
-              style={{ gridColumn: label.weekIndex + 2 }}
+              style={{ left: 30 + (label.weekIndex * 14) }}
             >
               {label.month}
             </div>
