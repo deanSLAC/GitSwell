@@ -15,6 +15,7 @@ function App() {
   const [topRepos, setTopRepos] = useState([]);
   const [hiddenRepoIds, setHiddenRepoIds] = useState(new Set());
   const [singleRepoMode, setSingleRepoMode] = useState(null); // null or repo id
+  const [allRepoCommits, setAllRepoCommits] = useState([]); // All commits for single repo (all years)
   const [isLoading, setIsLoading] = useState(true);
   const [parseStatus, setParseStatus] = useState('');
 
@@ -88,6 +89,27 @@ function App() {
 
     loadTopRepos();
   }, [selectedYear]);
+
+  // Load ALL commits for single repo (across all years) for charts
+  useEffect(() => {
+    if (!singleRepoMode) {
+      setAllRepoCommits([]);
+      return;
+    }
+
+    const loadAllRepoCommits = async () => {
+      try {
+        // Fetch without year filter to get all commits for this repo
+        const res = await fetch(`/api/commits?repoId=${singleRepoMode}`);
+        const data = await res.json();
+        setAllRepoCommits(data);
+      } catch (error) {
+        console.error('Failed to load all repo commits:', error);
+      }
+    };
+
+    loadAllRepoCommits();
+  }, [singleRepoMode]);
 
   // Load all repos
   const loadRepos = useCallback(async () => {
@@ -224,6 +246,7 @@ function App() {
         <HeatmapView
           commits={filteredCommits}
           allCommits={commits}
+          allRepoCommits={allRepoCommits}
           repos={repos}
           years={years}
           selectedYear={selectedYear}

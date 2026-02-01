@@ -9,6 +9,7 @@ import './HeatmapView.css';
 function HeatmapView({
   commits,
   allCommits,
+  allRepoCommits,
   repos,
   years,
   selectedYear,
@@ -97,9 +98,9 @@ function HeatmapView({
         />
       </div>
 
-      {singleRepoMode && singleRepoInfo && (
+      {singleRepoMode && singleRepoInfo && allRepoCommits.length > 0 && (
         <RepoCharts
-          commits={commits}
+          commits={allRepoCommits}
           repoInfo={singleRepoInfo}
         />
       )}
