@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import './ReposView.css';
 
 function ReposView({ repos, updateRepo, onBack }) {
-  const [filter, setFilter] = useState('all'); // all, active, ignored, duplicates
+  const [filter, setFilter] = useState('all'); // all, active, local, github, ignored, duplicates
   const [search, setSearch] = useState('');
   const [editingColor, setEditingColor] = useState(null);
 
@@ -10,6 +10,8 @@ function ReposView({ repos, updateRepo, onBack }) {
     return repos
       .filter(repo => {
         if (filter === 'active') return !repo.ignored;
+        if (filter === 'local') return !repo.ignored && !repo.has_github_remote;
+        if (filter === 'github') return !repo.ignored && repo.has_github_remote;
         if (filter === 'ignored') return repo.ignored;
         if (filter === 'duplicates') return repo.duplicate_of;
         return true;
@@ -23,9 +25,11 @@ function ReposView({ repos, updateRepo, onBack }) {
   const stats = useMemo(() => {
     const total = repos.length;
     const active = repos.filter(r => !r.ignored).length;
+    const localOnly = repos.filter(r => !r.ignored && !r.has_github_remote).length;
+    const onGithub = repos.filter(r => !r.ignored && r.has_github_remote).length;
     const ignored = repos.filter(r => r.ignored).length;
     const duplicates = repos.filter(r => r.duplicate_of).length;
-    return { total, active, ignored, duplicates };
+    return { total, active, localOnly, onGithub, ignored, duplicates };
   }, [repos]);
 
   const handleColorChange = (repoId, color) => {
@@ -60,6 +64,18 @@ function ReposView({ repos, updateRepo, onBack }) {
             onClick={() => setFilter('active')}
           >
             Active ({stats.active})
+          </button>
+          <button
+            className={`filter-btn ${filter === 'local' ? 'active' : ''}`}
+            onClick={() => setFilter('local')}
+          >
+            Local Only ({stats.localOnly})
+          </button>
+          <button
+            className={`filter-btn ${filter === 'github' ? 'active' : ''}`}
+            onClick={() => setFilter('github')}
+          >
+            On GitHub ({stats.onGithub})
           </button>
           <button
             className={`filter-btn ${filter === 'ignored' ? 'active' : ''}`}
@@ -112,13 +128,47 @@ function ReposView({ repos, updateRepo, onBack }) {
                       duplicate
                     </span>
                   )}
+                  {!repo.duplicate_of && !repo.has_github_remote && (
+                    <span className="local-badge" title="No GitHub remote — not on your GitHub profile">
+                      local only
+                    </span>
+                  )}
+                  {!repo.duplicate_of && repo.has_github_remote === 1 && (
+                    <span className="github-badge" title="Has a GitHub remote">
+                      GitHub
+                    </span>
+                  )}
                 </div>
                 {repo.duplicate_of ? (
                   <span className="repo-duplicate-of">
                     Backup/older version of: <strong>{repo.duplicate_of}</strong>
                   </span>
                 ) : (
-                  <span className="repo-path" title={repo.path}>{repo.path}</span>
+                  <div className="repo-locations">
+                    <span className="repo-path" title={repo.path}>{repo.path}</span>
+                    {repo.remote_url && (
+                      <span className="repo-remote">
+                        {repo.remote_url.includes('github.com') ? (
+                          <a
+                            href={repo.remote_url
+                              .replace(/^git@github\.com:/, 'https://github.com/')
+                              .replace(/^ssh:\/\/git@github\.com\//, 'https://github.com/')
+                              .replace(/\.git$/, '')}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="repo-remote-link"
+                          >
+                            {repo.remote_url
+                              .replace(/^git@github\.com:/, 'https://github.com/')
+                              .replace(/^ssh:\/\/git@github\.com\//, 'https://github.com/')
+                              .replace(/\.git$/, '')}
+                          </a>
+                        ) : (
+                          repo.remote_url
+                        )}
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
 

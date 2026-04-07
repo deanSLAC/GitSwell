@@ -140,6 +140,28 @@
   letter-spacing: 0.03em;
 }
 
+.local-badge {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: var(--color-accent, #58a6ff);
+  background: rgba(88, 166, 255, 0.15);
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.github-badge {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: var(--color-success, #7ee787);
+  background: rgba(126, 231, 135, 0.15);
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .repo-duplicate-of {
   font-size: 0.625rem;
   color: var(--text-muted);
@@ -149,12 +171,36 @@
   color: var(--text-secondary);
 }
 
+.repo-locations {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
 .repo-path {
   font-size: 0.625rem;
   color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.repo-remote {
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.repo-remote-link {
+  color: var(--color-accent, #58a6ff);
+  text-decoration: none;
+}
+
+.repo-remote-link:hover {
+  text-decoration: underline;
 }
 
 .repo-stats {

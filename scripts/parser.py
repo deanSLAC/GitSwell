@@ -74,6 +74,60 @@ def get_repo_name(repo_path, base_path):
     return rel_path
 
 
+def check_github_remote(repo_path):
+    """Check if this repo has a remote pointing to github.com."""
+    try:
+        result = subprocess.run(
+            ['git', 'remote', '-v'],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if result.returncode == 0:
+            return 'github.com' in result.stdout
+    except Exception:
+        pass
+    return False
+
+
+def get_remote_url(repo_path):
+    """Get the URL of the origin remote (or first available remote)."""
+    try:
+        result = subprocess.run(
+            ['git', 'remote', 'get-url', 'origin'],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+        # Fall back to first available remote
+        result = subprocess.run(
+            ['git', 'remote'],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if result.returncode == 0:
+            remotes = result.stdout.strip().split('\n')
+            if remotes and remotes[0]:
+                result = subprocess.run(
+                    ['git', 'remote', 'get-url', remotes[0]],
+                    cwd=repo_path,
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    return result.stdout.strip()
+    except Exception:
+        pass
+    return None
+
+
 def get_commit_hashes(repo_path):
     """Get just the commit hashes from a repo (fast operation for duplicate detection)."""
     try:
@@ -224,7 +278,9 @@ def main():
             path TEXT NOT NULL,
             color TEXT DEFAULT NULL,
             ignored INTEGER DEFAULT 0,
-            duplicate_of TEXT DEFAULT NULL
+            duplicate_of TEXT DEFAULT NULL,
+            has_github_remote INTEGER DEFAULT 0,
+            remote_url TEXT DEFAULT NULL
         );
 
         CREATE TABLE IF NOT EXISTS commits (
@@ -258,14 +314,29 @@ def main():
     except sqlite3.OperationalError:
         pass  # Column already exists
 
+    # Add has_github_remote column if it doesn't exist (for existing databases)
+    try:
+        cursor.execute('ALTER TABLE repos ADD COLUMN has_github_remote INTEGER DEFAULT 0')
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+
+    # Add remote_url column if it doesn't exist (for existing databases)
+    try:
+        cursor.execute('ALTER TABLE repos ADD COLUMN remote_url TEXT DEFAULT NULL')
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+
     # Get existing repos to preserve colors and manually-set ignored status
     existing_repos = {}
-    cursor.execute('SELECT name, color, ignored, duplicate_of FROM repos')
+    cursor.execute('SELECT name, color, ignored, duplicate_of, has_github_remote FROM repos')
     for row in cursor.fetchall():
         existing_repos[row[0]] = {
             'color': row[1],
             'ignored': row[2],
-            'duplicate_of': row[3]
+            'duplicate_of': row[3],
+            'has_github_remote': row[4]
         }
 
     # First pass: collect commit hashes for duplicate detection
@@ -301,6 +372,10 @@ def main():
         print(f"Processing [{i+1}/{len(repos)}]: {repo_name}...")
         sys.stdout.flush()
 
+        # Check for GitHub remote and get remote URL
+        github_remote = 1 if check_github_remote(repo_path) else 0
+        remote_url = get_remote_url(repo_path)
+
         # Determine color - preserve existing or generate new
         if repo_name in existing_repos and existing_repos[repo_name]['color']:
             color = existing_repos[repo_name]['color']
@@ -328,16 +403,18 @@ def main():
 
         # Insert or update repo
         cursor.execute('''
-            INSERT INTO repos (name, path, color, ignored, duplicate_of)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO repos (name, path, color, ignored, duplicate_of, has_github_remote, remote_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(name) DO UPDATE SET
                 path = excluded.path,
                 duplicate_of = excluded.duplicate_of,
+                has_github_remote = excluded.has_github_remote,
+                remote_url = excluded.remote_url,
                 ignored = CASE
                     WHEN excluded.duplicate_of IS NOT NULL THEN 1
                     ELSE repos.ignored
                 END
-        ''', (repo_name, repo_path, color, ignored, duplicate_of))
+        ''', (repo_name, repo_path, color, ignored, duplicate_of, github_remote, remote_url))
 
         cursor.execute('SELECT id FROM repos WHERE name = ?', (repo_name,))
         repo_id = cursor.fetchone()[0]
@@ -368,8 +445,9 @@ def main():
                 print(f"Error inserting commit {commit['hash']}: {e}", file=sys.stderr)
 
         total_commits += commit_count
+        github_label = " [GitHub]" if github_remote else " [local only]"
         status = " [DUPLICATE - auto-ignored]" if is_duplicate else ""
-        print(f"  Added {commit_count} new commits (total in repo: {len(commits)}){status}")
+        print(f"  Added {commit_count} new commits (total in repo: {len(commits)}){github_label}{status}")
         sys.stdout.flush()
 
         # Commit periodically to avoid large transactions

@@ -32,7 +32,8 @@ db.exec(`
     name TEXT UNIQUE NOT NULL,
     path TEXT NOT NULL,
     color TEXT DEFAULT NULL,
-    ignored INTEGER DEFAULT 0
+    ignored INTEGER DEFAULT 0,
+    has_github_remote INTEGER DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS commits (
@@ -58,6 +59,20 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_commits_repo ON commits(repo_id);
   CREATE INDEX IF NOT EXISTS idx_file_changes_commit ON file_changes(commit_id);
 `);
+
+// Migrate: add has_github_remote column for existing databases
+try {
+  db.exec('ALTER TABLE repos ADD COLUMN has_github_remote INTEGER DEFAULT 0');
+} catch (e) {
+  // Column already exists
+}
+
+// Migrate: add remote_url column for existing databases
+try {
+  db.exec('ALTER TABLE repos ADD COLUMN remote_url TEXT DEFAULT NULL');
+} catch (e) {
+  // Column already exists
+}
 
 app.use(express.json());
 
@@ -131,7 +146,7 @@ app.patch('/api/repos/:id', (req, res) => {
 
 // API: Get commits with optional filtering
 app.get('/api/commits', (req, res) => {
-  const { year, includeIgnored, repoId } = req.query;
+  const { year, includeIgnored, repoId, githubFilter } = req.query;
 
   let whereClause = '1=1';
   const params = [];
@@ -150,6 +165,12 @@ app.get('/api/commits', (req, res) => {
   if (repoId) {
     whereClause += ' AND r.id = ?';
     params.push(repoId);
+  }
+
+  if (githubFilter === 'local') {
+    whereClause += ' AND r.has_github_remote = 0';
+  } else if (githubFilter === 'github') {
+    whereClause += ' AND r.has_github_remote = 1';
   }
 
   const commits = db.prepare(`
@@ -175,7 +196,19 @@ app.get('/api/commits', (req, res) => {
 
 // API: Get available years
 app.get('/api/years', (req, res) => {
-  const { includeIgnored } = req.query;
+  const { includeIgnored, githubFilter } = req.query;
+
+  let conditions = [];
+
+  if (includeIgnored !== 'true') {
+    conditions.push('r.ignored = 0');
+  }
+
+  if (githubFilter === 'local') {
+    conditions.push('r.has_github_remote = 0');
+  } else if (githubFilter === 'github') {
+    conditions.push('r.has_github_remote = 1');
+  }
 
   let query = `
     SELECT DISTINCT strftime('%Y', datetime(c.timestamp, 'unixepoch')) as year
@@ -183,8 +216,8 @@ app.get('/api/years', (req, res) => {
     JOIN repos r ON c.repo_id = r.id
   `;
 
-  if (includeIgnored !== 'true') {
-    query += ' WHERE r.ignored = 0';
+  if (conditions.length > 0) {
+    query += ' WHERE ' + conditions.join(' AND ');
   }
 
   query += ' ORDER BY year DESC';
@@ -196,7 +229,7 @@ app.get('/api/years', (req, res) => {
 // API: Get top repos for a year
 app.get('/api/top-repos/:year', (req, res) => {
   const { year } = req.params;
-  const { limit = 3, includeIgnored } = req.query;
+  const { limit = 3, includeIgnored, githubFilter } = req.query;
 
   const startOfYear = new Date(`${year}-01-01T00:00:00Z`).getTime() / 1000;
   const endOfYear = new Date(`${parseInt(year) + 1}-01-01T00:00:00Z`).getTime() / 1000;
@@ -210,6 +243,12 @@ app.get('/api/top-repos/:year', (req, res) => {
 
   if (includeIgnored !== 'true') {
     query += ' AND r.ignored = 0';
+  }
+
+  if (githubFilter === 'local') {
+    query += ' AND r.has_github_remote = 0';
+  } else if (githubFilter === 'github') {
+    query += ' AND r.has_github_remote = 1';
   }
 
   query += ' GROUP BY r.id ORDER BY commit_count DESC LIMIT ?';
@@ -263,7 +302,7 @@ app.post('/api/parse', (req, res) => {
 
 // API: Get stats
 app.get('/api/stats', (req, res) => {
-  const { year, includeIgnored, excludeRepos } = req.query;
+  const { year, includeIgnored, excludeRepos, githubFilter } = req.query;
   const excludeList = excludeRepos ? excludeRepos.split(',').map(Number) : [];
 
   let whereClause = '1=1';
@@ -283,6 +322,12 @@ app.get('/api/stats', (req, res) => {
   if (excludeList.length > 0) {
     whereClause += ` AND r.id NOT IN (${excludeList.map(() => '?').join(',')})`;
     params.push(...excludeList);
+  }
+
+  if (githubFilter === 'local') {
+    whereClause += ' AND r.has_github_remote = 0';
+  } else if (githubFilter === 'github') {
+    whereClause += ' AND r.has_github_remote = 1';
   }
 
   const stats = db.prepare(`

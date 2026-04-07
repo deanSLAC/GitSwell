@@ -18,7 +18,9 @@ function HeatmapView({
   hiddenRepoIds,
   toggleRepoVisibility,
   singleRepoMode,
-  setSingleRepoMode
+  setSingleRepoMode,
+  githubFilter,
+  setGithubFilter
 }) {
   const [selectedDate, setSelectedDate] = useState(null);
 
@@ -26,11 +28,32 @@ function HeatmapView({
   const stats = useMemo(() => {
     const totalCommits = commits.length;
     const uniqueRepos = new Set(commits.map(c => c.repo_id)).size;
-    const uniqueDays = new Set(
+    const daySet = new Set(
       commits.map(c => new Date(c.timestamp * 1000).toISOString().split('T')[0])
-    ).size;
+    );
+    const uniqueDays = daySet.size;
 
-    return { totalCommits, uniqueRepos, uniqueDays };
+    // Calculate longest streak of consecutive days
+    let longestStreak = 0;
+    if (daySet.size > 0) {
+      const sortedDays = [...daySet].sort();
+      let current = 1;
+      for (let i = 1; i < sortedDays.length; i++) {
+        const prev = new Date(sortedDays[i - 1] + 'T00:00:00Z');
+        const curr = new Date(sortedDays[i] + 'T00:00:00Z');
+        const diffDays = (curr - prev) / (1000 * 60 * 60 * 24);
+        if (diffDays === 1) {
+          current++;
+        } else {
+          current = 1;
+        }
+        if (current > longestStreak) longestStreak = current;
+      }
+      if (sortedDays.length === 1) longestStreak = 1;
+      if (current > longestStreak) longestStreak = current;
+    }
+
+    return { totalCommits, uniqueRepos, uniqueDays, longestStreak };
   }, [commits]);
 
   // Get commits for selected date
@@ -61,6 +84,9 @@ function HeatmapView({
           <span className="stat">
             <strong>{stats.uniqueDays}</strong> active days
           </span>
+          <span className="stat">
+            <strong>{stats.longestStreak}</strong> longest streak
+          </span>
         </div>
 
         <YearSelector
@@ -68,6 +94,36 @@ function HeatmapView({
           selectedYear={selectedYear}
           onChange={setSelectedYear}
         />
+      </div>
+
+      <div className="github-filter-bar">
+        <div className="github-filter-toggle">
+          <button
+            className={`github-filter-btn ${githubFilter === 'all' ? 'active' : ''}`}
+            onClick={() => setGithubFilter('all')}
+          >
+            All
+          </button>
+          <button
+            className={`github-filter-btn ${githubFilter === 'local' ? 'active' : ''}`}
+            onClick={() => setGithubFilter('local')}
+          >
+            Local Only
+          </button>
+          <button
+            className={`github-filter-btn ${githubFilter === 'github' ? 'active' : ''}`}
+            onClick={() => setGithubFilter('github')}
+          >
+            On GitHub
+          </button>
+        </div>
+        {githubFilter !== 'all' && (
+          <span className="github-filter-label">
+            {githubFilter === 'local'
+              ? 'Showing contributions not on GitHub'
+              : 'Showing contributions already on GitHub'}
+          </span>
+        )}
       </div>
 
       {singleRepoMode && singleRepoInfo && (

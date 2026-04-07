@@ -16,6 +16,7 @@ function App() {
   const [hiddenRepoIds, setHiddenRepoIds] = useState(new Set());
   const [singleRepoMode, setSingleRepoMode] = useState(null); // null or repo id
   const [allRepoCommits, setAllRepoCommits] = useState([]); // All commits for single repo (all years)
+  const [githubFilter, setGithubFilter] = useState('all'); // all, local, github
   const [isLoading, setIsLoading] = useState(true);
   const [parseStatus, setParseStatus] = useState('');
 
@@ -62,6 +63,9 @@ function App() {
         if (singleRepoMode) {
           params.set('repoId', singleRepoMode);
         }
+        if (githubFilter !== 'all') {
+          params.set('githubFilter', githubFilter);
+        }
         const res = await fetch(`/api/commits?${params}`);
         const data = await res.json();
         setCommits(data);
@@ -71,7 +75,7 @@ function App() {
     };
 
     loadCommits();
-  }, [selectedYear, singleRepoMode]);
+  }, [selectedYear, singleRepoMode, githubFilter]);
 
   // Load top repos when year changes
   useEffect(() => {
@@ -79,7 +83,11 @@ function App() {
 
     const loadTopRepos = async () => {
       try {
-        const res = await fetch(`/api/top-repos/${selectedYear}?limit=5`);
+        const params = new URLSearchParams({ limit: 5 });
+        if (githubFilter !== 'all') {
+          params.set('githubFilter', githubFilter);
+        }
+        const res = await fetch(`/api/top-repos/${selectedYear}?${params}`);
         const data = await res.json();
         setTopRepos(data);
       } catch (error) {
@@ -88,7 +96,7 @@ function App() {
     };
 
     loadTopRepos();
-  }, [selectedYear]);
+  }, [selectedYear, githubFilter]);
 
   // Load ALL commits for single repo (across all years) for charts
   useEffect(() => {
@@ -256,6 +264,8 @@ function App() {
           toggleRepoVisibility={toggleRepoVisibility}
           singleRepoMode={singleRepoMode}
           setSingleRepoMode={setSingleRepoMode}
+          githubFilter={githubFilter}
+          setGithubFilter={setGithubFilter}
         />
       )}
 
